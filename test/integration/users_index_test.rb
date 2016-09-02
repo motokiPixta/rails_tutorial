@@ -22,4 +22,11 @@ class UsersIndexTest < ActionDispatch::IntegrationTest
       delete user_path(@non_admin)
     end
   end
+
+  test "friendly fowarding test" do
+    get users_path
+	assert_redirected_to login_url
+	log_in_as(@non_admin)
+	assert_redirected_to users_path
+  end
 end
