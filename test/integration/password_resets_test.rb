@@ -41,7 +41,7 @@ class PasswordResetTest < ActionDispatch::IntegrationTest
           email: user.email,
           user: {password:               "foobaz",
                  password_confirmation: "barquux" }
-    assert_select "div$error_explanation"
+    assert_select "div#error_explanation"
     # パスワードが空
     patch password_reset_path(user.reset_token), 
           email: user.email,
@@ -56,5 +56,20 @@ class PasswordResetTest < ActionDispatch::IntegrationTest
     assert is_logged_in?
     assert_not flash.empty?
     assert_redirected_to user
+  end
+  
+  test "expired token" do
+    get new_password_reset_path
+    post password_resets_path, password_reset: {email: @user.email }
+
+    @user = assigns(:user)
+    @user.update_attribute(:reset_sent_at, 3.hours.ago)
+    patch password_reset_path(@user.reset_token), 
+          email: @user.email,
+          user: {password:              "foobar",
+                 password_confirmation: "foobar" }
+    assert_response :redirect
+	follow_redirect!
+	assert_match /expired/i, response.body
   end
 end
